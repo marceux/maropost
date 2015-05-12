@@ -58,6 +58,11 @@ class Maropost {
 		return "$name=$value";
 	}
 
+	/**
+	 * Creates URL query string with an array of name and value pairs
+	 * @param  array $params Array of arrays of name-value pairs
+	 * @return string        The name-value pairs, url encoded.
+	 */
 	public function params($params)
 	{
 		$numItems = count($params); // number of items
