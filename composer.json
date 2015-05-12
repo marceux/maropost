@@ -18,7 +18,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Marceux\\Maropost\\": "src"
+            "Marceux\\Maropost\\": "src/",
+            "Marceux\\Maropost\\Api\\": "src/api"
         }
     }
 }

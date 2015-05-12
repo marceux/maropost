@@ -1,6 +1,6 @@
 <?php namespace Marceux\Maropost\Api;
 
-use Marceux\Maropost;
+use Marceux\Maropost\Maropost;
 
 class Contacts {
 
