@@ -1,0 +1,24 @@
+{
+    "name": "marceux/maropost",
+    "description": "A simple wrapper for communicating with Maropost's API",
+    "license": "MIT",
+    "keywords": ["maropost"],
+    "authors": [
+        {
+            "name": "Marco Salazar de Leon",
+            "email": "msalazardeleon@gmail.com"
+        }
+    ],
+    "require": {
+        "nategood/httpful": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.0.*",
+        "vlucas/phpdotenv": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Marceux\\Maropost\\": "src"
+        }
+    }
+}
