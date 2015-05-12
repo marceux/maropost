@@ -104,7 +104,7 @@ class Maropost {
 
 			// Start building string output
 			$output .= $this->baseUrl;
-			$output .= "$target" . $this->$format . "?auth_token=";
+			$output .= "$target." . $this->format . "?auth_token=";
 			$output .= $this->auth;
 
 			// Check for if $params is an array
