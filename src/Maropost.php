@@ -83,49 +83,98 @@ class Maropost {
 		return $output;
 	}
 
-	public function url($service, $target, $params)
+	/**
+	 * Creates the URL used to make a request to Maropost API
+	 * @param  array  $args  An array containing target URI and parameter data
+	 * @return string        The URL used for the request
+	 */
+	public function url($args)
 	{
-		$format = $this->format;
+		// Set output as empty string
+		$output = '';
 
-		// Start fleshing output
-		$output = $this->baseUrl;
-		$output .= "$service/";
-		$output .= "$target.$format?auth_token=";
-		$output .= $this->auth;
-
-		// Check for Parameters array
-		if (is_array($params) && !empty($params))
+		// Check if there is at least a target string provided
+		// for the first argument
+		// ... else return the empty $output
+		if (isset($args[0]) && is_string($args[0]))
 		{
-			// Add ampersand
-			$output .= "&";
+			// Set $target and $params
+			$target = $args[0];
+			$params = isset($args[1]) ? $args[1] : null;
 
-			// Check if multiple parameters
-			if (is_array($params[0]))
+			// Start building string output
+			$output .= $this->baseUrl;
+			$output .= "$target" . $this->$format . "?auth_token=";
+			$output .= $this->auth;
+
+			// Check for if $params is an array
+			if (is_array($params) && !empty($params))
 			{
-				if (count($params) > 1)
-					$output .= $this->params($params);
-				else
-					$output .= $this->param($params[0][0], $params[0][1]);
-			}
+				// Add ampersand for additional query vars
+				$output .= "&";
 
-			else
-				$output .= $this->param($params[0], $params[1]);
+				// Check if multiple parameters
+				if (is_array($params[0]))
+				{
+					if (count($params) > 1)
+						$output .= $this->params($params);
+					else
+						$output .= $this->param($params[0][0], $params[0][1]);
+				}
+
+				else
+					$output .= $this->param($params[0], $params[1]);
+			}
 		}
 
 		return $output;
 	}
 
-	public function request($url)
+	public function get()
 	{
-		return Request::get($url)->expects($this->format)->send();
+		$url = $this->url(func_get_args());
+		return "Get: $url";
+		/*
+		return Request::get($url)
+		                ->expects($this)
+		                ->send()
+		                ->body;
+		*/
 	}
 
-	public function contactSearch($email)
+	public function post()
 	{
-		$url = $this->url('contacts', 'email', array('contact[email]', $email));
+		$url = $this->url(func_get_args());
+		return "Post: $url";
+		/*
+		return Request::post($url)
+		                ->expects($this)
+		                ->send()
+		                ->body;
+		*/
+	}
 
-		// Make API Response
-		$response = $this->request($url);
-		return $response->body;
+	public function put()
+	{
+		$url = $this->url(func_get_args());
+		return "Put: $url";
+		/*
+		return Request::put($url)
+		                ->expects($this)
+		                ->send()
+		                ->body;
+		*/
+	}
+
+	public function delete()
+	{
+		$url = $this->url(func_get_args());
+		return "Delete: $url";
+		/*
+		return Request::delete($url)
+		                ->expects($this)
+		                ->send()
+		                ->body;
+		*/
 	}
 }
