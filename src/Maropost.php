@@ -12,6 +12,8 @@ class Maropost {
 	private $auth;
 	private $format;
 
+	private $apis = array();
+
 	public $baseUrl = "http://api.maropost.com/accounts/";
 
 	/**
@@ -176,5 +178,32 @@ class Maropost {
 		                ->send()
 		                ->body;
 		*/
+	}
+
+	/**
+	 * Returns the requested class name, optionally using a cached array so no
+	 * object is instantiated more than once during a request.
+	 *
+	 * @param string $class
+	 * @return mixed
+	 */
+	public function getApi($class)
+	{
+		$class = '\Marceux\Maropost\Api\\' . $class;
+
+		if (!array_key_exists($class, $this->apis))
+		{
+			$this->apis[$class] = new $class($this);
+		}
+
+		return $this->apis[$class];
+	}
+
+	/**
+	 * @return  \Marceux\Maropost\Api\Contacts
+	 */
+	public function contacts()
+	{
+		return $this->getApi('Contacts');
 	}
 }
