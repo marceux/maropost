@@ -19,6 +19,7 @@ class Maropost {
 	 * authentication key
 	 * @param string $acct Account number
 	 * @param string $auth Authentication key
+	 * @param string $format The format the responses and requests will be in
 	 */
 	public function __construct($acct, $auth, $format = 'json')
 	{
@@ -41,12 +42,14 @@ class Maropost {
 		
 
 		$this->baseUrl .= "$acct/";
-
-
-		// After setting the baseURL value
-		// there should be a way to check if the connection works
 	}
 
+	/**
+	 * Create URL query string with name and value pairs
+	 * @param  string $name  Name of query string parameter
+	 * @param  string $value Value of query string parameter
+	 * @return string        The name-value pair, url encoded.
+	 */
 	public function param($name, $value)
 	{
 		// url encode the value
