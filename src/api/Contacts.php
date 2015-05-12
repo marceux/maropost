@@ -34,14 +34,14 @@ class Contacts {
 		return $this->client->post('contacts', $contactData);
 	}
 
-	public function new($listId)
+	public function blank($listId)
 	{
-		return $this->client->request("lists/$listId/contacts/new");
+		return $this->client->get("lists/$listId/contacts/new");
 	}
 
 	public function show($listId, $contactId)
 	{
-		return $this->client->request("lists/$listId/contacts/$contactId");
+		return $this->client->get("lists/$listId/contacts/$contactId");
 	}
 
 	public function update($listId, $contactId, $contactData)
@@ -54,7 +54,7 @@ class Contacts {
 		return $this->client->put('contacts/unsubscribe_all', array('contact[email]', $email));
 	}
 
-	public function destroy($listId, $contactId)
+	public function destroy($listId, $contactId, $email)
 	{
 		return $this->client->delete("lists/$listId/contacts/$contactId", array('contact[email]', $email));
 	}
