@@ -22,11 +22,12 @@ class Maropost {
 	 */
 	public function __construct($acct, $auth, $format = 'json')
 	{
+		// Set base properties
 		$this->acct = $acct;
 		$this->auth = $auth;
 		$this->format = $format;
 		
-		// Create HTTP Client
+		// Create HTTP Client with some default options
 		$this->client = new Client([
 			'base_url' => "http://api.maropost.com/accounts/$acct/",
 			'defaults' => [
@@ -36,36 +37,68 @@ class Maropost {
 	}
 
 	/**
-	 * @return [type] [description]
+	 * Appends the format of the request to the target uri
+	 * @param  string $target The target URI
+	 * @return string         Target URI with appended format (.json or .xml)
+	 */
+	private function buildTarget($target)
+	{
+		return $target . '.' . $this->format;
+	}
+
+	/**
+	 * Function to handle exceptions caught in the request methods
+	 * @param  object $exception [description]
+	 * @return [type]            [description]
+	 */
+	private function handleException($exception)
+	{			
+		// Check if the Exception has a response
+		if ($e->hasResponse())
+		{
+			// Use the exception response to a build an array to return
+			// with the status code (so at least we have something)
+			$response = $e->getResponse();
+			$status = $response->getStatusCode();
+			return ['status' => $status];
+		}
+		else
+			return ['status' => 404];
+	}
+
+	/**
+	 * Function to perform GET method on $target URI with $params as query parameters
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
 	 */
 	public function get($target, $params = [])
 	{
-		$target = $target . '.' . $this->format;
+		$target = $this->buildTarget($target);
 
+		// Try to get a response from Maropost API using Guzzle Client
 		try
 		{
 			$response = $this->client->get($target, ['query' => $params]);
 
+			// If successful, return an array that decodes the returned JSON
 			return json_decode($response->getBody(), true);
 		}
 		catch (ClientException $e)
 		{
-			if ($e->hasResponse())
-			{
-				$response = $e->getResponse();
-				$status = $response->getStatusCode();
-				return ['status' => $status];
-			}
-			else
-			{
-				return ['status' => 404];
-			}
+			return $this->handleException($e);
 		}
 	}
 
+	/**
+	 * Function to perform POST method on $target URI with $params as JSON body
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
 	public function post($target, $params = [])
 	{
-		$target = $target . '.' . $this->format;
+		$target = $this->buildTarget($target);
 
 		try
 		{
@@ -80,22 +113,19 @@ class Maropost {
 		}
 		catch (ClientException $e)
 		{
-			if ($e->hasResponse())
-			{
-				$response = $e->getResponse();
-				$status = $response->getStatusCode();
-				return ['status' => $status];
-			}
-			else
-			{
-				return ['status' => 404];
-			}
+			return $this->handleException($e);
 		}
 	}
 
+	/**
+	 * Function to perform PUT method on $target URI with $params as JSON body
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
 	public function put($target, $params = [])
 	{
-		$target = $target . '.' . $this->format;
+		$target = $this->buildTarget($target);
 
 		try
 		{
@@ -110,22 +140,19 @@ class Maropost {
 		}
 		catch (ClientException $e)
 		{
-			if ($e->hasResponse())
-			{
-				$response = $e->getResponse();
-				$status = $response->getStatusCode();
-				return ['status' => $status];
-			}
-			else
-			{
-				return ['status' => 404];
-			}
+			return $this->handleException($e);
 		}
 	}
 
+	/**
+	 * Function to perform DELETE method on $target URI with $params as query parameters
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
 	public function delete($target, $params = [])
 	{
-		$target = $target . '.' . $this->format;
+		$target = $this->buildTarget($target);
 
 		try
 		{
@@ -134,16 +161,7 @@ class Maropost {
 		}
 		catch (ClientException $e)
 		{
-			if ($e->hasResponse())
-			{
-				$response = $e->getResponse();
-				$status = $response->getStatusCode();
-				return ['status' => $status];
-			}
-			else
-			{
-				return ['status' => 404];
-			}
+			return $this->handleException($e);
 		}
 	}
 
