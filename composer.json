@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "nategood/httpful": "*"
+        "guzzlehttp/guzzle": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "4.0.*",
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Marceux\\Maropost\\": "src"
+            "Maropost\\": ["src/", "tests/"]
         }
     }
 }

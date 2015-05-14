@@ -1,123 +1,194 @@
-<?php namespace Marceux\Maropost;
+<?php namespace Maropost;
 
-use Httpful\Httpful;
-use Httpful\Request;
-use Httpful\Mime;
-use Httpful\Handlers\JsonHandler;
-use Httpful\Handlers\XmlHandler;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 
 class Maropost {
 
 	private $acct;
 	private $auth;
 	private $format;
+	
+	private $client;
 
-	public $baseUrl = "http://api.maropost.com/accounts/";
+	private $apis = array();
 
 	/**
 	 * Construct Maropost API object using the acct number and
 	 * authentication key
 	 * @param string $acct Account number
 	 * @param string $auth Authentication key
+	 * @param string $format The format the responses and requests will be in
 	 */
 	public function __construct($acct, $auth, $format = 'json')
 	{
+		// Set base properties
 		$this->acct = $acct;
 		$this->auth = $auth;
-
-		// Store format of requests and responses
 		$this->format = $format;
-
-		switch ($format) {
-			case 'xml':
-				Httpful::register(Mime::getFullMime($format), new XmlHandler());
-				break;
-			
-			case 'json':
-			default:
-				Httpful::register(Mime::getFullMime($format), new JsonHandler(array('decode_as_array' => true)));
-				break;
-		}
 		
-
-		$this->baseUrl .= "$acct/";
-
-
-		// After setting the baseURL value
-		// there should be a way to check if the connection works
+		// Create HTTP Client with some default options
+		$this->client = new Client([
+			'base_url' => "http://api.maropost.com/accounts/$acct/",
+			'defaults' => [
+				'query' => ['auth_token' => $this->auth]
+			]
+		]);
 	}
 
-	public function param($name, $value)
+	/**
+	 * Appends the format of the request to the target uri
+	 * @param  string $target The target URI
+	 * @return string         Target URI with appended format (.json or .xml)
+	 */
+	private function buildTarget($target)
 	{
-		// url encode the value
-		$value = urlencode($value);
-
-		return "$name=$value";
+		return $target . '.' . $this->format;
 	}
 
-	public function params($params)
-	{
-		$numItems = count($params); // number of items
-		$i = 0;                     // array counter
-		$output = '';               // output object
-
-		// Iterate over parameters
-		foreach($params as $param) {
-			$output .= $this->param($param[0], $param[1]);
-			
-			// If counter reaches the last item...
-			if(++$i < $numItems) {
-				// ...append ampersand
-				$output .= '&';
-			}
-		}
-
-		return $output;
-	}
-
-	public function url($service, $target, $params)
-	{
-		$format = $this->format;
-
-		// Start fleshing output
-		$output = $this->baseUrl;
-		$output .= "$service/";
-		$output .= "$target.$format?auth_token=";
-		$output .= $this->auth;
-
-		// Check for Parameters array
-		if (is_array($params) && !empty($params))
+	/**
+	 * Function to handle exceptions caught in the request methods
+	 * @param  object $exception [description]
+	 * @return [type]            [description]
+	 */
+	private function handleException($exception)
+	{			
+		// Check if the Exception has a response
+		if ($e->hasResponse())
 		{
-			// Add ampersand
-			$output .= "&";
+			// Use the exception response to a build an array to return
+			// with the status code (so at least we have something)
+			$response = $e->getResponse();
+			$status = $response->getStatusCode();
+			return ['status' => $status];
+		}
+		else
+			return ['status' => 404];
+	}
 
-			// Check if multiple parameters
-			if (is_array($params[0]))
-			{
-				if (count($params) > 1)
-					$output .= $this->params($params);
-				else
-					$output .= $this->param($params[0][0], $params[0][1]);
-			}
+	/**
+	 * Function to perform GET method on $target URI with $params as query parameters
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
+	public function get($target, $params = [])
+	{
+		$target = $this->buildTarget($target);
 
-			else
-				$output .= $this->param($params[0], $params[1]);
+		// Try to get a response from Maropost API using Guzzle Client
+		try
+		{
+			$response = $this->client->get($target, ['query' => $params]);
+
+			// If successful, return an array that decodes the returned JSON
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			return $this->handleException($e);
+		}
+	}
+
+	/**
+	 * Function to perform POST method on $target URI with $params as JSON body
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
+	public function post($target, $params = [])
+	{
+		$target = $this->buildTarget($target);
+
+		try
+		{
+			$response = $this->client->post($target, [
+				'json' => $params,
+				'headers' => [
+					'Accept' => 'application/json'
+				]
+			]);
+
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			return $this->handleException($e);
+		}
+	}
+
+	/**
+	 * Function to perform PUT method on $target URI with $params as JSON body
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
+	public function put($target, $params = [])
+	{
+		$target = $this->buildTarget($target);
+
+		try
+		{
+			$response = $this->client->put($target, [
+				'json' => $params,
+				'headers' => [
+					'Accept' => 'application/json'
+				]
+			]);
+
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			return $this->handleException($e);
+		}
+	}
+
+	/**
+	 * Function to perform DELETE method on $target URI with $params as query parameters
+	 * @param  string $target The URI target that will be added to the base url
+	 * @param  array  $params The query string and values structured as an array
+	 * @return array          What Maropost returns as an array structure
+	 */
+	public function delete($target, $params = [])
+	{
+		$target = $this->buildTarget($target);
+
+		try
+		{
+			$response = $this->client->delete($target, ['query' => $params]);
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			return $this->handleException($e);
+		}
+	}
+
+	/**
+	 * Returns the requested class name, optionally using a cached array so no
+	 * object is instantiated more than once during a request.
+	 *
+	 * @param string $class
+	 * @return mixed
+	 */
+	public function getApi($class)
+	{
+		$class = '\Maropost\api\\' . $class;
+
+		if (!array_key_exists($class, $this->apis))
+		{
+			$this->apis[$class] = new $class($this);
 		}
 
-		return $output;
+		return $this->apis[$class];
 	}
 
-	public function request($url)
+	/**
+	 * @return  \Marceux\Maropost\Api\Contacts
+	 */
+	public function contacts()
 	{
-		return Request::get($url)->expects($this->format)->send();
-	}
-
-	public function contactSearch($email)
-	{
-		$url = $this->url('contacts', 'email', array('contact[email]', $email));
-
-		// Make API Response
-		$response = $this->request($url);
-		return $response->body;
+		return $this->getApi('Contacts');
 	}
 }
