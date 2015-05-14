@@ -1,226 +1,142 @@
 <?php
- 
-use Marceux\Maropost\Maropost;
+
+use Maropost\Maropost;
 
 // Load .env variables
 Dotenv::load(__DIR__);
 
 class MaropostTest extends PHPUnit_Framework_TestCase {
 
-	/**
-	 * @dataProvider credentialsProvider
-	 */
-	public function testConstruct($acct, $auth)
+	protected $acct;
+	protected $auth;
+	protected $maropost;
+
+	protected function setUp()
 	{
-		$m = new Maropost($acct, $auth);
-		$this->assertEquals($m->baseUrl, "http://api.maropost.com/accounts/$acct/");
+		$this->acct = $_ENV['MAROPOST_ACCT'];
+		$this->auth = $_ENV['MAROPOST_AUTH'];
+		$this->maropost = new Maropost($this->acct, $this->auth);
 	}
 
 	/**
-	 * @depends testConstruct
+	 * @dataProvider getProvider
 	 */
-	public function testParam()
+	public function testGet($target, $params)
 	{
-		$m = new Maropost('foo', 'bar');
-		$queryV = urlencode('value');
-		$this->assertEquals($m->param('test', 'value'), "test=$queryV");
+		$response = $this->maropost->get($target, $params);
+		$this->assertTrue(is_array($response));
 	}
 
 	/**
-	 * @depends testParam
-	 * @dataProvider parametersProvider
+	 * @dataProvider postProvider
 	 */
-	public function testParams($params, $output)
+	public function testPost($target, $params)
 	{
-		$m = new Maropost('foo', 'bar');
-		$this->assertEquals($m->params($params), $output); 
+		$response = $this->maropost->post($target, $params);
+		$this->assertTrue(is_array($response));
 	}
 
 	/**
-	 * @depends testParam
-	 * @depends testParams
-	 * @dataProvider urlsProvider
+	 * @dataProvider putProvider
 	 */
-	public function testUrl($target, $format, $params, $output)
+	public function testPut($target, $params)
 	{
-		$m = new Maropost('foo', 'bar', $format);
-		$this->assertEquals($m->url(array($target, $params)), $output);
+		$response = $this->maropost->put($target, $params);
+		$this->assertTrue(is_array($response));
 	}
 
 	/**
-	 * @depends testUrl
-	 * @dataProvider requestProvider
+	 * @dataProvider deleteProvider
 	 */
-	public function testGet($target, $params, $output)
+	public function testDelete($target, $params)
 	{
-		$m = new Maropost('foo', 'bar');
-		$result  = 'Get: ' . $m->baseUrl . "$target.json?auth_token=bar";
-		if ($output != '') $result .= "&$output";
-		$this->assertEquals($m->get($target, $params), $result);
-
-	}
-
-	/**
-	 * @depends testUrl
-	 * @dataProvider requestProvider
-	 */
-	public function testPost($target, $params, $output)
-	{
-		$m = new Maropost('foo', 'bar');
-		$result  = 'Post: ' . $m->baseUrl . "$target.json?auth_token=bar";
-		if ($output != '') $result .= "&$output";
-		$this->assertEquals($m->post($target, $params), $result);		
-	}
-
-	/**
-	 * @depends testUrl
-	 * @dataProvider requestProvider
-	 */
-	public function testPut($target, $params, $output)
-	{
-		$m = new Maropost('foo', 'bar');
-		$result  = 'Put: ' . $m->baseUrl . "$target.json?auth_token=bar";
-		if ($output != '') $result .= "&$output";
-		$this->assertEquals($m->put($target, $params), $result);		
-	}
-
-	/**
-	 * @depends testUrl
-	 * @dataProvider requestProvider
-	 */
-	public function testDelete($target, $params, $output)
-	{
-		$m = new Maropost('foo', 'bar');
-		$result  = 'Delete: ' . $m->baseUrl . "$target.json?auth_token=bar";
-		if ($output != '') $result .= "&$output";
-		$this->assertEquals($m->delete($target, $params), $result);		
+		$response = $this->maropost->delete($target, $params);
+		$this->assertTrue(is_null($response) || is_array($response));
 	}
 
 	//--- Providers ---///
-
-	public function credentialsProvider()
+	public function getProvider()
 	{
-		return array(
-			array($_ENV['MAROPOST_ACCT'], $_ENV['MAROPOST_AUTH'])
-		);
+		return [
+			[
+				'contacts/email',
+				['contact' => ['email' => $_ENV['GET_EMAIL']]]
+			],
+			[
+				'target/test',
+				['name', 'value']
+			],
+			[
+				'lists/16546/contacts',
+				[]
+			]
+		];
 	}
 
-	public function parametersProvider()
+	public function postProvider()
 	{
-		return array(
-			// One Parameter
-			array( 
-				array( 
-					array('test', 'value')
-				),
-				'test=value'
-			),
-			
-			// Two Parameters
-			array(
-				array(
-					array('test', 'value'),
-					array('foo', 'bar'),
-				),
-				'test=value&foo=bar'
-			),
-
-			// Three Parameters
-			array( 
-				array(
-					array('test', 'value'),
-					array('foo', 'bar'),
-					array('necro', 'd!a@n#c$e%r%'),
-				),
-				'test=value&foo=bar&necro=d%21a%40n%23c%24e%25r%25'
-			),
-		);
+		return [
+			[
+				'contacts',
+				 [
+				 	'custom_field' => [
+				 	    "custom_field_1" => null,
+						"custom_field_2" => null,
+						"custom_field_3" => null,
+				 	],
+				 	"contact" => [
+    					"email" => $_ENV['POST_EMAIL'],
+    					"first_name" => $_ENV['POST_FNAME'],
+    					"last_name" => $_ENV['POST_LNAME'],
+    					"phone" => null,
+    					"fax" => null
+  					]
+				]
+			],
+			[
+				'target/test',
+				['name', 'value']
+			]
+		];
 	}
 
-	public function urlsProvider()
+	public function putProvider()
 	{
-		return array(
-			array(
-				// Target
-				'service/target',
-				
-				// Type
-				'json',
-
-				// Parameters
-				array(),
-
-				// Output
-				'http://api.maropost.com/accounts/foo/service/target.json?auth_token=bar',
-			),
-			array(
-				// Target
-				'service/target',
-				
-				// Type
-				'json',
-
-				// Parameters
-				array(
-					array('test', 'value')
-				),
-
-				// Output
-				'http://api.maropost.com/accounts/foo/service/target.json?auth_token=bar&test=value',
-			),
-			array(
-				// Target
-				'service/target',
-				
-				// Type
-				'xml',
-
-				// Parameters
-				array(
-					array('test', 'value'),
-					array('foo', 'bar')
-				),
-
-				// Output
-				'http://api.maropost.com/accounts/foo/service/target.xml?auth_token=bar&test=value&foo=bar',
-			),
-			array(
-				// Target
-				'service/target',
-				
-				// Type
-				'json',
-
-				// Parameters
-				array('test', 'value'),
-
-				// Output
-				'http://api.maropost.com/accounts/foo/service/target.json?auth_token=bar&test=value',
-			),
-		);
+		return [
+			[
+				"lists/{$_ENV['LIST_ID']}/contacts/{$_ENV['CONTACT_ID']}",
+				 [
+				 	'custom_field' => [
+				 	    "custom_field_1" => null,
+						"custom_field_2" => null
+				 	],
+				 	"contact" => [
+    					"email" => $_ENV['PUT_EMAIL'],
+    					"first_name" => $_ENV['PUT_FNAME'],
+    					"last_name" => $_ENV['PUT_LNAME'],
+    					"phone" => null,
+    					"fax" => null
+  					]
+				]
+			],
+			[
+				'target/test',
+				['name', 'value']
+			]
+		];
 	}
 
-	public function requestProvider()
+	public function deleteProvider()
 	{
-		return array(
-			array(
+		return [
+			[
+				"lists/{$_ENV['LIST_ID']}/contacts/{$_ENV['CONTACT_ID']}",
+				 []
+			],
+			[
 				'target/test',
-				array('name', 'value'),
-				'name=value'
-			),
-			array(
-				'target/test',
-				null,
-				''
-			),
-			array(
-				'target/test',
-				array(
-					array('name', 'value'),
-					array('some', 'thing')
-				),
-				'name=value&some=thing'
-			)
-		);
+				['name', 'value']
+			]
+		];
 	}
 }
