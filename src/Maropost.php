@@ -1,20 +1,17 @@
-<?php namespace Marceux\Maropost;
+<?php namespace Maropost;
 
-use Httpful\Httpful;
-use Httpful\Request;
-use Httpful\Mime;
-use Httpful\Handlers\JsonHandler;
-use Httpful\Handlers\XmlHandler;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 
 class Maropost {
 
 	private $acct;
 	private $auth;
 	private $format;
+	
+	private $client;
 
 	private $apis = array();
-
-	public $baseUrl = "http://api.maropost.com/accounts/";
 
 	/**
 	 * Construct Maropost API object using the acct number and
@@ -27,157 +24,127 @@ class Maropost {
 	{
 		$this->acct = $acct;
 		$this->auth = $auth;
-
-		// Store format of requests and responses
 		$this->format = $format;
-
-		switch ($format) {
-			case 'xml':
-				Httpful::register(Mime::getFullMime($format), new XmlHandler());
-				break;
-			
-			case 'json':
-			default:
-				Httpful::register(Mime::getFullMime($format), new JsonHandler(array('decode_as_array' => true)));
-				break;
-		}
 		
-
-		$this->baseUrl .= "$acct/";
+		// Create HTTP Client
+		$this->client = new Client([
+			'base_url' => "http://api.maropost.com/accounts/$acct/",
+			'defaults' => [
+				'query' => ['auth_token' => $this->auth]
+			]
+		]);
 	}
 
 	/**
-	 * Create URL query string with name and value pairs
-	 * @param  string $name  Name of query string parameter
-	 * @param  string $value Value of query string parameter
-	 * @return string        The name-value pair, url encoded.
+	 * @return [type] [description]
 	 */
-	public function param($name, $value)
+	public function get($target, $params)
 	{
-		// url encode the value
-		$value = urlencode($value);
+		$target = $target . '.' . $this->format;
 
-		return "$name=$value";
-	}
-
-	/**
-	 * Creates URL query string with an array of name and value pairs
-	 * @param  array $params Array of arrays of name-value pairs
-	 * @return string        The name-value pairs, url encoded.
-	 */
-	public function params($params)
-	{
-		$numItems = count($params); // number of items
-		$i = 0;                     // array counter
-		$output = '';               // output object
-
-		// Iterate over parameters
-		foreach($params as $param) {
-			$output .= $this->param($param[0], $param[1]);
-			
-			// If counter reaches the last item...
-			if(++$i < $numItems) {
-				// ...append ampersand
-				$output .= '&';
-			}
-		}
-
-		return $output;
-	}
-
-	/**
-	 * Creates the URL used to make a request to Maropost API
-	 * @param  array  $args  An array containing target URI and parameter data
-	 * @return string        The URL used for the request
-	 */
-	public function url($args)
-	{
-		// Set output as empty string
-		$output = '';
-
-		// Check if there is at least a target string provided
-		// for the first argument
-		// ... else return the empty $output
-		if (isset($args[0]) && is_string($args[0]))
+		try
 		{
-			// Set $target and $params
-			$target = $args[0];
-			$params = isset($args[1]) ? $args[1] : null;
+			$response = $this->client->get($target, ['query' => $params]);
 
-			// Start building string output
-			$output .= $this->baseUrl;
-			$output .= "$target." . $this->format . "?auth_token=";
-			$output .= $this->auth;
-
-			// Check for if $params is an array
-			if (is_array($params) && !empty($params))
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			if ($e->hasResponse())
 			{
-				// Add ampersand for additional query vars
-				$output .= "&";
-
-				// Check if multiple parameters
-				if (is_array($params[0]))
-				{
-					if (count($params) > 1)
-						$output .= $this->params($params);
-					else
-						$output .= $this->param($params[0][0], $params[0][1]);
-				}
-
-				else
-					$output .= $this->param($params[0], $params[1]);
+				$response = $e->getResponse();
+				$status = $response->getStatusCode();
+				return ['status' => $status];
+			}
+			else
+			{
+				return ['status' => 404];
 			}
 		}
-
-		return $output;
 	}
 
-	public function get()
+	public function post($target, $params)
 	{
-		$url = $this->url(func_get_args());
-		return "Get: $url";
-		/*
-		return Request::get($url)
-		                ->expects($this)
-		                ->send()
-		                ->body;
-		*/
+		$target = $target . '.' . $this->format;
+
+		try
+		{
+			$response = $this->client->post($target, [
+				'json' => $params,
+				'headers' => [
+					'Accept' => 'application/json'
+				]
+			]);
+
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			if ($e->hasResponse())
+			{
+				$response = $e->getResponse();
+				$status = $response->getStatusCode();
+				return ['status' => $status];
+			}
+			else
+			{
+				return ['status' => 404];
+			}
+		}
 	}
 
-	public function post()
+	public function put($target, $params)
 	{
-		$url = $this->url(func_get_args());
-		return "Post: $url";
-		/*
-		return Request::post($url)
-		                ->expects($this)
-		                ->send()
-		                ->body;
-		*/
+		$target = $target . '.' . $this->format;
+
+		try
+		{
+			$response = $this->client->put($target, [
+				'json' => $params,
+				'headers' => [
+					'Accept' => 'application/json'
+				]
+			]);
+
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			if ($e->hasResponse())
+			{
+				$response = $e->getResponse();
+				$status = $response->getStatusCode();
+				return ['status' => $status];
+			}
+			else
+			{
+				return ['status' => 404];
+			}
+		}
 	}
 
-	public function put()
+	public function delete($target, $params)
 	{
-		$url = $this->url(func_get_args());
-		return "Put: $url";
-		/*
-		return Request::put($url)
-		                ->expects($this)
-		                ->send()
-		                ->body;
-		*/
-	}
+		$target = $target . '.' . $this->format;
 
-	public function delete()
-	{
-		$url = $this->url(func_get_args());
-		return "Delete: $url";
-		/*
-		return Request::delete($url)
-		                ->expects($this)
-		                ->send()
-		                ->body;
-		*/
+		try
+		{
+			$response = $this->client->delete($target, ['query' => $params]);
+			return json_decode($response->getBody(), true);
+		}
+		catch (ClientException $e)
+		{
+			if ($e->hasResponse())
+			{
+				$response = $e->getResponse();
+				$status = $response->getStatusCode();
+				return ['status' => $status];
+			}
+			else
+			{
+				return ['status' => 404];
+			}
+		}
 	}
 
 	/**
@@ -189,7 +156,7 @@ class Maropost {
 	 */
 	public function getApi($class)
 	{
-		$class = '\Marceux\Maropost\Api\\' . $class;
+		$class = '\Maropost\api\\' . $class;
 
 		if (!array_key_exists($class, $this->apis))
 		{
