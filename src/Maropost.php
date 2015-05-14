@@ -38,7 +38,7 @@ class Maropost {
 	/**
 	 * @return [type] [description]
 	 */
-	public function get($target, $params)
+	public function get($target, $params = [])
 	{
 		$target = $target . '.' . $this->format;
 
@@ -63,7 +63,7 @@ class Maropost {
 		}
 	}
 
-	public function post($target, $params)
+	public function post($target, $params = [])
 	{
 		$target = $target . '.' . $this->format;
 
@@ -93,7 +93,7 @@ class Maropost {
 		}
 	}
 
-	public function put($target, $params)
+	public function put($target, $params = [])
 	{
 		$target = $target . '.' . $this->format;
 
@@ -123,7 +123,7 @@ class Maropost {
 		}
 	}
 
-	public function delete($target, $params)
+	public function delete($target, $params = [])
 	{
 		$target = $target . '.' . $this->format;
 
