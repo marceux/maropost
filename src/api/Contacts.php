@@ -51,11 +51,11 @@ class Contacts {
 
 	public function updateAllLists($email)
 	{
-		return $this->client->put('contacts/unsubscribe_all', array('contact[email]', $email));
+		return $this->client->put('contacts/unsubscribe_all', ['contact' => ['email' => $email]]);
 	}
 
 	public function destroy($listId, $contactId, $email)
 	{
-		return $this->client->delete("lists/$listId/contacts/$contactId", array('contact[email]', $email));
+		return $this->client->delete("lists/$listId/contacts/$contactId", ['contact' => ['email' => $email]]);
 	}
 }
