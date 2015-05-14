@@ -1,6 +1,6 @@
-<?php namespace Marceux\Maropost\Api;
+<?php namespace Maropost\api;
 
-use Marceux\Maropost\Maropost;
+use Maropost\Maropost;
 
 class Contacts {
 
@@ -16,7 +16,7 @@ class Contacts {
 	 */
 	public function search($email)
 	{
-		return $this->client->get('contacts/email', array('contact[email]', $email));
+		return $this->client->get('contacts/email', ['contact' => ['email' => $email]]);
 	}
 
 	public function index($listId)
