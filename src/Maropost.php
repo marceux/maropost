@@ -54,11 +54,11 @@ class Maropost {
 	private function handleException($exception)
 	{			
 		// Check if the Exception has a response
-		if ($e->hasResponse())
+		if ($exception->hasResponse())
 		{
 			// Use the exception response to a build an array to return
 			// with the status code (so at least we have something)
-			$response = $e->getResponse();
+			$response = $exception->getResponse();
 			$status = $response->getStatusCode();
 			return ['status' => $status];
 		}
