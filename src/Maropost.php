@@ -12,6 +12,8 @@ class Maropost {
 	private $client;
 
 	private $apis = array();
+  
+  public static $debug = false;
 
 	/**
 	 * Construct Maropost API object using the acct number and
@@ -22,18 +24,27 @@ class Maropost {
 	 */
 	public function __construct($acct, $auth, $format = 'json')
 	{
+    if(!$acct)
+    {
+      throw new \Exception("Maropost account ID is required. Get it from https://app.maropost.com");
+    }
+
+    if(!$auth)
+    {
+      throw new \Exception("Maropost auth token is required. Get it from https://app.maropost.com/accounts/{$acct}/connections");
+    }
+    
 		// Set base properties
 		$this->acct = $acct;
 		$this->auth = $auth;
 		$this->format = $format;
 		
 		// Create HTTP Client with some default options
-		$this->client = new Client([
-			'base_url' => "http://api.maropost.com/accounts/$acct/",
-			'defaults' => [
-				'query' => ['auth_token' => $this->auth]
-			]
-		]);
+    $args = [
+			'base_uri' => "http://api.maropost.com/accounts/$acct/",
+			'query' => ['auth_token' => $this->auth],
+    ];
+		$this->client = new Client($args);
 	}
 
 	/**
@@ -99,16 +110,15 @@ class Maropost {
 	public function post($target, $params = [])
 	{
 		$target = $this->buildTarget($target);
-
 		try
 		{
 			$response = $this->client->post($target, [
 				'json' => $params,
 				'headers' => [
 					'Accept' => 'application/json'
-				]
+				],
+        'debug'=>self::$debug,
 			]);
-
 			return json_decode($response->getBody(), true);
 		}
 		catch (ClientException $e)
@@ -133,7 +143,8 @@ class Maropost {
 				'json' => $params,
 				'headers' => [
 					'Accept' => 'application/json'
-				]
+				],
+        'debug'=>self::$debug,
 			]);
 
 			return json_decode($response->getBody(), true);
