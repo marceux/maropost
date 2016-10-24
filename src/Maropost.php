@@ -12,6 +12,8 @@ class Maropost {
 	private $client;
 
 	private $apis = array();
+  
+  public static $debug = false;
 
 	/**
 	 * Construct Maropost API object using the acct number and
@@ -115,7 +117,7 @@ class Maropost {
 				'headers' => [
 					'Accept' => 'application/json'
 				],
-        'debug'=>true,
+        'debug'=>self::$debug,
 			]);
 			return json_decode($response->getBody(), true);
 		}
@@ -142,6 +144,7 @@ class Maropost {
 				'headers' => [
 					'Accept' => 'application/json'
 				],
+        'debug'=>self::$debug,
 			]);
 
 			return json_decode($response->getBody(), true);
